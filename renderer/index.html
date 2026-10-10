@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zentro Download Manager</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="titlebar" aria-hidden="true"></div>
+
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="assets/logo.svg" alt="" width="38" height="38">
+        <div class="brand-text">
+          <strong>Zentro</strong>
+          <span>Download Manager</span>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Main">
+        <button class="nav-item" data-view="home" type="button">
+          <svg class="icon" data-icon="home" viewBox="0 0 24 24" aria-hidden="true"></svg>
+          <span class="nav-label">Home</span>
+        </button>
+        <button class="nav-item" data-view="downloads" type="button">
+          <svg class="icon" data-icon="download" viewBox="0 0 24 24" aria-hidden="true"></svg>
+          <span class="nav-label">Downloads</span>
+          <span class="count" id="count-downloads" hidden></span>
+        </button>
+        <button class="nav-item" data-view="completed" type="button">
+          <svg class="icon" data-icon="check" viewBox="0 0 24 24" aria-hidden="true"></svg>
+          <span class="nav-label">Completed</span>
+          <span class="count count-quiet" id="count-completed" hidden></span>
+        </button>
+        <button class="nav-item" data-view="settings" type="button">
+          <svg class="icon" data-icon="sliders" viewBox="0 0 24 24" aria-hidden="true"></svg>
+          <span class="nav-label">Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="speedometer">
+          <span class="speedometer-label">Current speed</span>
+          <strong id="total-speed">0 B/s</strong>
+        </div>
+        <span class="version" id="version"></span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="page-head">
+        <h1 id="page-title">Home</h1>
+        <button class="btn btn-ghost" id="open-downloads-folder" type="button" title="Open your Windows Downloads folder">
+          <svg class="icon" data-icon="folder" viewBox="0 0 24 24" aria-hidden="true"></svg>
+          <span>Downloads folder</span>
+        </button>
+      </header>
+
+      <section class="urlzone" id="urlzone">
+        <div class="urlbar" id="urlbar">
+          <svg class="icon icon-muted" data-icon="link" viewBox="0 0 24 24" aria-hidden="true"></svg>
+          <input id="url-input" type="text" inputmode="url" autocomplete="off" spellcheck="false"
+                 placeholder="Paste a download link, like https://example.com/file.zip" aria-label="Download link">
+          <button class="btn btn-quiet" id="paste-btn" type="button" title="Paste from clipboard">
+            <svg class="icon" data-icon="paste" viewBox="0 0 24 24" aria-hidden="true"></svg>
+            <span>Paste</span>
+          </button>
+          <button class="btn btn-primary" id="download-btn" type="button">
+            <svg class="icon" data-icon="download" viewBox="0 0 24 24" aria-hidden="true"></svg>
+            <span>Download</span>
+          </button>
+        </div>
+        <p class="url-error" id="url-error" role="alert" hidden></p>
+      </section>
+
+      <div class="views" id="views">
+        <!-- Home -->
+        <section class="view" id="view-home" aria-labelledby="page-title">
+          <div class="stats">
+            <div class="stat"><strong id="stat-active">0</strong><span>In progress</span></div>
+            <div class="stat"><strong id="stat-completed">0</strong><span>Completed</span></div>
+            <div class="stat"><strong id="stat-failed">0</strong><span>Need attention</span></div>
+          </div>
+          <h2 class="section-title">In progress</h2>
+          <div class="list" id="list-home-active"></div>
+          <div class="empty" id="empty-home-active" hidden>
+            <svg class="icon empty-icon" data-icon="download" viewBox="0 0 24 24" aria-hidden="true"></svg>
+            <p class="empty-title">Nothing downloading right now</p>
+            <p class="empty-text">Paste a link above and press Download. Pause, resume and cancel appear here.</p>
+          </div>
+          <h2 class="section-title" id="recent-title" hidden>Recently finished</h2>
+          <div class="list" id="list-home-recent"></div>
+        </section>
+
+        <!-- Downloads -->
+        <section class="view" id="view-downloads" hidden>
+          <div class="toolbar">
+            <div class="tabs" role="tablist" aria-label="Filter downloads">
+              <button class="tab" role="tab" data-filter="all" aria-selected="true" type="button">All <span class="tab-count" id="tab-all">0</span></button>
+              <button class="tab" role="tab" data-filter="active" aria-selected="false" type="button">Active <span class="tab-count" id="tab-active">0</span></button>
+              <button class="tab" role="tab" data-filter="failed" aria-selected="false" type="button">Failed <span class="tab-count" id="tab-failed">0</span></button>
+            </div>
+          </div>
+          <div class="list" id="list-downloads"></div>
+          <div class="empty" id="empty-downloads" hidden>
+            <svg class="icon empty-icon" data-icon="download" viewBox="0 0 24 24" aria-hidden="true"></svg>
+            <p class="empty-title" id="empty-downloads-title">No downloads yet</p>
+            <p class="empty-text" id="empty-downloads-text">Paste a link in the bar above to start your first download.</p>
+          </div>
+        </section>
+
+        <!-- Completed -->
+        <section class="view" id="view-completed" hidden>
+          <div class="toolbar toolbar-end">
+            <button class="btn btn-ghost" id="clear-completed" type="button">
+              <svg class="icon" data-icon="trash" viewBox="0 0 24 24" aria-hidden="true"></svg>
+              <span>Clear list</span>
+            </button>
+          </div>
+          <div class="list" id="list-completed"></div>
+          <div class="empty" id="empty-completed" hidden>
+            <svg class="icon empty-icon" data-icon="check" viewBox="0 0 24 24" aria-hidden="true"></svg>
+            <p class="empty-title">No finished downloads</p>
+            <p class="empty-text">Files you download will be listed here, ready to open.</p>
+          </div>
+        </section>
+
+        <!-- Settings -->
+        <section class="view" id="view-settings" hidden>
+          <div class="panel">
+            <div class="setting">
+              <div class="setting-text">
+                <h3>Download folder</h3>
+                <p class="setting-value" id="setting-dir">-</p>
+                <p class="setting-hint">New downloads are saved here. Existing ones stay where they are.</p>
+              </div>
+              <div class="setting-actions">
+                <button class="btn btn-ghost" id="open-configured-folder" type="button">Open</button>
+                <button class="btn btn-primary" id="choose-folder" type="button">Change folder</button>
+              </div>
+            </div>
+            <div class="setting">
+              <div class="setting-text">
+                <h3>Notifications</h3>
+                <p class="setting-hint">Show a Windows notification when a download finishes or fails.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="setting-notifications" role="switch" aria-label="Notifications">
+                <span class="switch-track"></span>
+              </label>
+            </div>
+            <div class="setting">
+              <div class="setting-text">
+                <h3>Downloads at the same time</h3>
+                <p class="setting-hint">Extra downloads wait in the queue until a slot is free.</p>
+              </div>
+              <select id="setting-concurrent" aria-label="Downloads at the same time">
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                <option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="8">8</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="panel panel-note">
+            <h3>Your safety</h3>
+            <p>Zentro only accepts http and https links. It never runs a downloaded file by itself, and it asks you first before opening programs and scripts such as .exe, .msi, .bat and .ps1 files.</p>
+            <p class="setting-hint" id="about-line"></p>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

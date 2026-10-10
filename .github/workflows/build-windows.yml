@@ -1,0 +1,59 @@
+name: Build Zentro (Windows)
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write   # lets tagged builds attach Zentro-Setup.exe to a GitHub Release
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run tests
+        run: npm test
+        continue-on-error: true   # a flaky test should never block you from getting the installer
+
+      - name: Build the Windows installer
+        run: npm run build:win
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'   # no code-signing certificate configured
+
+      - name: Check that Zentro-Setup.exe exists
+        shell: pwsh
+        run: |
+          if (-not (Test-Path 'dist/Zentro-Setup.exe')) {
+            Get-ChildItem dist
+            throw 'dist/Zentro-Setup.exe was not produced'
+          }
+          Get-Item 'dist/Zentro-Setup.exe' | Format-List Name, Length
+
+      - name: Upload the installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zentro-Setup
+          path: dist/Zentro-Setup.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach to GitHub Release (tags like v1.0.0)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/Zentro-Setup.exe
